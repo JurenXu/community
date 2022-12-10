@@ -8,6 +8,11 @@
         id, user_id, title, content, type, status, create_time, comment_count, score
     </sql>
 
+    <sql id="insertFields">
+        user_id, title, content, type, status, create_time, comment_count, score
+    </sql>
+
+
     <select id="selectDiscussPosts" resultType="DiscussPost">
         select <include refid="selectFields"></include>
         from discuss_post
@@ -15,7 +20,6 @@
         <if test="userId!=0">
             and user_id = #{userId}
         </if>
-#         按指定以及创建时间排序
         order by type desc, create_time desc
         limit #{offset}, #{limit}
     </select>
@@ -28,4 +32,20 @@
             and user_id = #{userId}
         </if>
     </select>
+
+    <select id="selectDiscussPostById" resultType="DiscussPost">
+        select <include refid="selectFields"></include>
+        from discuss_post
+        where id = #{id}
+    </select>
+
+    <insert id="insertDiscussPost" parameterType="DiscussPost">
+        insert into discuss_post(<include refid="insertFields"></include>)
+        values(#{userId},#{title},#{content},#{type},#{status},#{createTime},#{commentCount},#{score})
+    </insert>
+
+    <update id="updateCommentCount">
+        update discuss_post set comment_count = #{commentCount} where id = #{id}
+    </update>
+
 </mapper>

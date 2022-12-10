@@ -163,7 +163,115 @@ public class UserService implements CommunityConstant {
         loginTicketMapper.updateStatus(ticket, 1);
     }
 
+    public Map<String, Object> resetPassword(String email, String password) {
+        Map<String, Object> map = new HashMap<>();
+
+
+        if (StringUtils.isBlank(email)) {
+            map.put("emailMsg", "邮箱不能为空");
+            return map;
+        }
+
+        if (StringUtils.isBlank(email)) {
+            map.put("passwordMsg", "密码不能为空");
+            return map;
+        }
+
+        User user = userMapper.selectByEmail(email);
+
+        if (user == null) {
+            map.put("emailMsg", "该邮箱尚未注册");
+            return map;
+        }
+
+//        password = CommunityUtil.md5(password + user.getSalt());
+//        if (password.equals(user.getPassword())) {
+//            map.put("passwordMsg", "新密码不能和旧密码一样");
+//            return map;
+//        }
+
+        password = CommunityUtil.md5(password + user.getSalt());
+        userMapper.updatePassword(user.getId(), password);
+        map.put("user", user);
+
+        return map;
+    }
+
+    public Map<String, Object> verifyCode(String email) {
+
+        Map<String, Object> map = new HashMap<>();
+
+        if (StringUtils.isBlank(email)) {
+            return map;
+        }
+
+        User user = userMapper.selectByEmail(email);
+
+        if (user == null) {
+            return map;
+        }
+
+        //生成验证码并发送邮件
+        String code = CommunityUtil.generateUUID().substring(0,4);
+
+        //激活邮件
+        Context context = new Context();
+        context.setVariable("email", email);
+        context.setVariable("verifyCode", code);
+        String content = templateEngine.process("/mail/forget", context);
+        mailClient.sendMail(user.getEmail(), "忘记密码", content);
+        map.put("code", code);
+        map.put("user", user);
+        return map;
+    }
+
+    public Map<String, Object> updatePassword(int userId, String oldPassword, String newPassword, String confirmPassword) {
+        Map<String, Object> map = new HashMap<>();
+        if (StringUtils.isBlank(oldPassword)) {
+            map.put("oldPasswordMsg", "原密码不能为空");
+            return map;
+        }
+
+
+        if (StringUtils.isBlank(newPassword)) {
+            map.put("newPasswordMsg", "新密码不能为空");
+            return map;
+        }
+
+        if (StringUtils.isBlank(confirmPassword)) {
+            map.put("confirmPasswordMsg", "确认密码不能为空");
+            return map;
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            map.put("confirmPasswordMsg", "两次输入密码不一致");
+            return map;
+        }
+
+        // 验证原始密码
+        User user = userMapper.selectById(userId);
+
+        if (!user.getPassword().equals(CommunityUtil.md5(oldPassword + user.getSalt()))) {
+            map.put("oldPasswordMsg", "原密码输入有误");
+            return map;
+        }
+
+
+
+        // 更新密码
+        newPassword = CommunityUtil.md5(newPassword + user.getSalt());
+        userMapper.updatePassword(userId, newPassword);
+
+        return map;
+    }
+
     public LoginTicket findLoginTicket (String ticket) {
         return loginTicketMapper.selectByTicket(ticket);
     }
+
+    public int updateHeader (int userId, String headerUrl) {
+        return userMapper.updateHeader(userId, headerUrl);
+    }
+
+
 }
