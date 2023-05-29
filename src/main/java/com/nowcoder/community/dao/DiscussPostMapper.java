@@ -9,7 +9,7 @@ import java.util.List;
 @Mapper
 public interface DiscussPostMapper {
 
-    List<DiscussPost> selectDiscussPosts(int userId, int offset, int limit);
+    List<DiscussPost> selectDiscussPosts(int userId, int offset, int limit, int orderMode);
 
     //查询表里一共有多少条数据
     //@Param注解用于给参数取别名，
@@ -23,5 +23,9 @@ public interface DiscussPostMapper {
     int updateCommentCount(int id, int commentCount);
 
 
+    int updateStatus(int id, int status);
 
+    int updateType(int id, int type);
+
+    int updateScore(int id, double score);
 }
